@@ -1,19 +1,20 @@
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import constant.Color;
 import constant.SQL;
 
 import java.sql.*;
 
 public class Employee {
-    static SQL sql = new SQL();
+    static String ID;
+    static String name;
+    static String Role;
 
     public void printDetails(String id){
         try{
-            Connection connection = DriverManager.getConnection(sql.DB_URL,
-                    sql.DB_Username,
-                    sql.DB_Password);
+            Connection connection = DriverManager.getConnection(SQL.DB_URL,
+                    SQL.DB_Username,
+                    SQL.DB_Password);
 
-            PreparedStatement getDetails = connection.prepareStatement("SELECT * FROM " + sql.DB_Employee +
+            PreparedStatement getDetails = connection.prepareStatement("SELECT * FROM " + SQL.DB_Employee +
                     " WHERE EmployeeID = ?");
 
             getDetails.setString(1, id);
@@ -34,15 +35,42 @@ public class Employee {
         }
     }
 
+    public static String getName(String id){
+        try{
+            Connection connection = DriverManager.getConnection(SQL.DB_URL,
+                    SQL.DB_Username,
+                    SQL.DB_Password);
+
+            PreparedStatement getDetails = connection.prepareStatement("SELECT * FROM " + SQL.DB_Employee +
+                    " WHERE EmployeeID = ?");
+
+            getDetails.setString(1, id);
+            ResultSet resultSet = getDetails.executeQuery();
+            if(!resultSet.isBeforeFirst()){
+                System.out.println("Employee Not Found");
+            }
+
+            resultSet.next();
+
+            return resultSet.getString("EmployeeName");
+
+
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean checkLogin(String id,String password){
         try{
             Connection connection = DriverManager.getConnection(
-                    sql.DB_URL,
-                    sql.DB_Username,
-                    sql.DB_Password
+                    SQL.DB_URL,
+                    SQL.DB_Username,
+                    SQL.DB_Password
             );
 
-            PreparedStatement getDetails = connection.prepareStatement("SELECT * FROM " + sql.DB_Employee +
+            PreparedStatement getDetails = connection.prepareStatement("SELECT * FROM " + SQL.DB_Employee +
                     " WHERE EmployeeID = ? AND Password = ?");
             getDetails.setString(1, id);
             getDetails.setString(2, password);
@@ -51,7 +79,9 @@ public class Employee {
                 return false;
             }
             resultSet.next();
-            resultSet.getString("EmployeeID");
+            ID = resultSet.getString("EmployeeID");
+            name = resultSet.getString("EmployeeName");
+            Role = resultSet.getString("Role");
             resultSet.getString("password");
             if(resultSet.getString("password").equals(password)){
                 return true;
@@ -67,7 +97,7 @@ public class Employee {
             Connection connection = DriverManager.getConnection(SQL.DB_URL ,
                     SQL.DB_Username ,
                     SQL.DB_Password);
-            PreparedStatement insertDetails = connection.prepareStatement("INSERT INTO " + sql.DB_Employee +
+            PreparedStatement insertDetails = connection.prepareStatement("INSERT INTO " + SQL.DB_Employee +
                     " (EmployeeID,EmployeeName,Password,Role) VALUES (?,?,?,?)");
             insertDetails.setString(1, id);
             insertDetails.setString(2, name);
