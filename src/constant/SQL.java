@@ -6,5 +6,6 @@ public class SQL {
     public static final String DB_Password = "-";
     public static final String DB_Employee = "employee";
     public static final String DB_Clock = "clock_time";
+    public static final String DB_Stock = "stock";
 
 }
