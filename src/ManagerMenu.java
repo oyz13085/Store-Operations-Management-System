@@ -8,8 +8,8 @@ public class ManagerMenu {
     public void ManagerFunction(String UserID){
         System.out.println("\n=== Manager Menu ===");
         System.out.println("1. Register New Employee");
-        System.out.println("2. Log Out");
-        System.out.println("3. Clock In");
+        System.out.println("2. Clock In/Clock Out");
+        System.out.println("3. Log Out");
         System.out.print("Enter your choice (1-3): ");
         int choice = scanner.nextInt();
         System.out.println(" ");
@@ -28,11 +28,10 @@ public class ManagerMenu {
                 Employee.registerEmployee(name,id,password,role);
                 break;
             case 2 :
-                isLogin = false;
+                EmployeeMenu.Clocking(UserID);
                 break;
             case 3:
-                EmployeeMenu employeeMenu = new EmployeeMenu();
-                employeeMenu.Clocking(UserID,"clockin");
+                isLogin = false;
                 break;
             default : System.out.println("Invalid choice");
         }
