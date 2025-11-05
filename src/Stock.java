@@ -1,6 +1,7 @@
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
+
 import constant.Color;
 import constant.SQL;
+import constant.filePath;
 
 import java.io.*;
 import java.sql.*;
@@ -17,12 +18,29 @@ public class Stock {
     static DateTimeFormatter date = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static DateTimeFormatter time = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    public static void main(String[] args) {
-        //StockCount();
-        //generateStockReceipt();
-        //writeStockReceipt();
-        moveStock("C6013");
+//    public static void main(String[] args) {
+//        //StockCount();
+//        //writeStockReceipt();
+//        //moveStock("C6013");
+//        //System.out.println(getPricing("DW2300-1"));
+//        //editStock("DW2300-1");
+//
+//    }
 
+    public static void stockSystem(String UserID){
+        System.out.println("===Stock Management===");
+        System.out.println("1. Stock Count");
+        System.out.println("2. Stock In/Stock Out");
+        System.out.print("Enter your choice (1-2): ");
+        int choice = scanner.nextInt();
+
+        if(choice == 1){
+            Stock.StockCount();
+        }else if(choice == 2){
+            Stock.moveStock(UserID);
+        }else{
+            System.out.println("Invalid choice");
+        }
     }
 
     public static void StockCount(){
@@ -37,7 +55,7 @@ public class Stock {
             int noCorrect = 0;
 
             //morning or night count
-            System.out.println("===Stock Count===");
+            System.out.println("\n===Stock Count===");
             System.out.println("1. Morning Stock Count");
             System.out.println("2. Night Stock Count");
             System.out.print("Enter your choice: ");
@@ -81,11 +99,11 @@ public class Stock {
     }
 
     public static void generateStockReceipt(){
-        File receipt = new File("C:\\Users\\User\\Desktop\\Stock\\receipts_" + LocalDate.now().format(date)+".txt");
+        File receipt = new File(filePath.stockFile + LocalDate.now().format(date)+".txt");
     }
 
     public static void writeStockReceipt(int type, String from, String to, HashMap<String, Integer> stock, int totalQuantity, String userID){
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("C:\\Users\\User\\Desktop\\Stock\\receipts_" + LocalDate.now().format(date)+".txt",true)) ){
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath.stockFile + LocalDate.now().format(date)+".txt",true)) ){
             bw.newLine();
             bw.write("\n==="+((type==1)?"Stock In":"Stock Out")+"===");
             bw.newLine();
@@ -108,7 +126,7 @@ public class Stock {
             bw.newLine();
             bw.write("Employee in Charged:  " + Employee.getName(userID));
 
-            System.out.println("Receipt generated: receipts_" + LocalDate.now().format(date)+".txt");
+            System.out.println("Receipt generated: Stock Record_" + LocalDate.now().format(date)+".txt");
 
         }catch(IOException e){
             e.printStackTrace();
@@ -145,49 +163,16 @@ public class Stock {
 
             totalQuantity += quantity;
 
-            try{
-                Connection connection = DriverManager.getConnection(SQL.DB_URL,SQL.DB_Username,SQL.DB_Password);
-                if(choice==1){
-                    PreparedStatement updateCount = connection.prepareStatement("UPDATE " + SQL.DB_Stock +
-                            " SET stock = stock + ?" +
-                            " WHERE model = ?");
+            updateStock(choice,model,quantity);
 
-                    updateCount.setInt(1, quantity);
-                    updateCount.setString(2, model);
-
-                    updateCount.executeUpdate();
-
-                    if(stockUpdated.containsKey(model)){
-                        stockUpdated.put(model, stockUpdated.get(model) + quantity);
-                    }else{
-                        stockUpdated.put(model, quantity);
-                    }
-
-                }else{
-                    PreparedStatement updateCount = connection.prepareStatement("UPDATE " + SQL.DB_Stock +
-                            " SET stock = stock - ?" +
-                            " WHERE model = ?");
-
-                    updateCount.setInt(1, quantity);
-                    updateCount.setString(2, model);
-
-                    updateCount.executeUpdate();
-
-                    if(stockUpdated.containsKey(model)){
-                        stockUpdated.put(model, stockUpdated.get(model) + quantity);
-                    }else{
-                        stockUpdated.put(model, quantity);
-                    }
-
-                }
-
-            }catch(SQLException e){
-                e.printStackTrace();
+            if(stockUpdated.containsKey(model)){
+                stockUpdated.put(model, stockUpdated.get(model) + quantity);
+            }else{
+                stockUpdated.put(model, quantity);
             }
 
             System.out.print("\nContinue (Y/N): ");
             char answer =  scanner.next().charAt(0);
-
 
             if(answer != 'Y'){
                 break;
@@ -216,5 +201,121 @@ public class Stock {
 
         //hashmap for code of outlet
 
+    }
+
+    public static void updateStock(int choice, String modelName, int quantity){
+        try{
+            Connection connection = DriverManager.getConnection(SQL.DB_URL,SQL.DB_Username,SQL.DB_Password);
+            PreparedStatement updateCount;
+            if(choice==1){
+                updateCount = connection.prepareStatement("UPDATE " + SQL.DB_Stock +
+                        " SET stock = stock + ?" +
+                        " WHERE model = ?");
+            }else{
+                updateCount = connection.prepareStatement("UPDATE " + SQL.DB_Stock +
+                        " SET stock = stock - ?" +
+                        " WHERE model = ?");
+            }
+
+            updateCount.setInt(1, quantity);
+            updateCount.setString(2, modelName);
+
+            updateCount.executeUpdate();
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    public static double getPricing(String modelName){
+        try{
+            Connection connection = DriverManager.getConnection(SQL.DB_URL,SQL.DB_Username,SQL.DB_Password);
+            PreparedStatement getInfo = connection.prepareStatement("SELECT * FROM " + SQL.DB_Stock +
+                    " WHERE model = ?");
+            getInfo.setString(1, modelName);
+
+            ResultSet resultSet = getInfo.executeQuery();
+
+            if(!resultSet.isBeforeFirst()){
+                return 0;
+            }
+
+            resultSet.next();
+            return resultSet.getDouble("unitprice");
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static void searchStock(String model){
+        try{
+            Connection connection = DriverManager.getConnection(SQL.DB_URL,SQL.DB_Username,SQL.DB_Password);
+            PreparedStatement getRecord = connection.prepareStatement(
+                    "SELECT * FROM " + SQL.DB_Stock +
+                            " WHERE model = ?"
+            );
+
+            getRecord.setString(1, model);
+
+            ResultSet resultSet = getRecord.executeQuery();
+
+            if(!resultSet.isBeforeFirst()){
+                System.out.println("No Records Found");
+            }
+
+            resultSet.next();
+
+            System.out.println("Model Record Found: ");
+
+            System.out.print("Model Name: " + resultSet.getString("model"));
+            System.out.printf("\nUnit Price: RM%.2f", resultSet.getDouble("unitprice"));
+
+            System.out.println("\nStock by Outlet:");
+            System.out.print(resultSet.getString("stock"));
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    public static void editStock(String model){
+        try{
+            Connection connection = DriverManager.getConnection(SQL.DB_URL,SQL.DB_Username,SQL.DB_Password);
+
+            PreparedStatement getStock = connection.prepareStatement("SELECT * FROM " + SQL.DB_Stock +
+                    " WHERE model = ?");
+            getStock.setString(1, model);
+
+            ResultSet resultSet = getStock.executeQuery();
+
+            if(!resultSet.isBeforeFirst()){
+                System.out.println("No Records Found");
+            }
+
+            resultSet.next();
+
+            System.out.println("Current Stock: " + resultSet.getString("stock"));
+
+            System.out.print("Enter New Stock Value: ");
+            int newStock = scanner.nextInt();
+
+            PreparedStatement editStockLevel = connection.prepareStatement(
+                    "UPDATE " + SQL.DB_Stock +
+                            " SET stock = ? WHERE model = ?"
+            );
+
+            editStockLevel.setInt(1, newStock);
+            editStockLevel.setString(2, model);
+
+            editStockLevel.executeUpdate();
+
+            System.out.println("Stock information updated " + Color.GREEN + "successfully" + Color.RESET + ".");
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
     }
 }

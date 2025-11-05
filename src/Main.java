@@ -7,11 +7,6 @@ public class Main {
     public static void main(String[] args) {
         boolean running = true;
 
-        Employee employee = new Employee();
-        ManagerMenu managerMenu = new ManagerMenu();
-        EmployeeMenu employeeMenu = new EmployeeMenu();
-        employee.printDetails("C6013");
-
         //login page
         while(running){
             System.out.println("=== Employee Login ===");
@@ -19,16 +14,16 @@ public class Main {
             String userID = input.nextLine();
             System.out.print("Enter Password: ");
             String password = input.nextLine();
-            if(employee.checkLogin(userID,password)){
+            if(Employee.checkLogin(userID,password)){
                 System.out.println("\nLogin " + Color.GREEN + "Successful" + Color.RESET + "!\n");
 
                 if(Employee.Role.contains("Manager")){
                     while(ManagerMenu.isLogin){
-                        managerMenu.ManagerFunction(userID);
+                        ManagerMenu.displayMenu(userID);
                     }
                 }else{
                     while(EmployeeMenu.isLogin){
-                        employeeMenu.EmployeeFunction(userID);
+                        EmployeeMenu.displayMenu(userID);
                     }
                 }
             }else {

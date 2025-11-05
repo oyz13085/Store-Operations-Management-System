@@ -8,33 +8,6 @@ public class Employee {
     static String name;
     static String Role;
 
-    public void printDetails(String id){
-        try{
-            Connection connection = DriverManager.getConnection(SQL.DB_URL,
-                    SQL.DB_Username,
-                    SQL.DB_Password);
-
-            PreparedStatement getDetails = connection.prepareStatement("SELECT * FROM " + SQL.DB_Employee +
-                    " WHERE EmployeeID = ?");
-
-            getDetails.setString(1, id);
-            ResultSet resultSet = getDetails.executeQuery();
-            if(!resultSet.isBeforeFirst()){
-                System.out.println("Employee Not Found");
-            }
-            while(resultSet.next()){
-                System.out.println(resultSet.getString("EmployeeID"));
-                System.out.println(resultSet.getString("EmployeeName"));
-                System.out.println(resultSet.getString("Role"));
-                System.out.println(resultSet.getString("Password"));
-
-            }
-
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-    }
-
     public static String getName(String id){
         try{
             Connection connection = DriverManager.getConnection(SQL.DB_URL,
@@ -62,7 +35,7 @@ public class Employee {
         return null;
     }
 
-    public boolean checkLogin(String id,String password){
+    public static boolean checkLogin(String id,String password){
         try{
             Connection connection = DriverManager.getConnection(
                     SQL.DB_URL,
